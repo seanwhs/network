@@ -1,0 +1,81 @@
+{% extends "network/layout.html" %}
+
+{% block body %}
+
+<script>
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    function likeHandler(id, post_liked) {
+        const btn = document.getElementById(`${id}`);
+        btn.classList.remove('fa-thumbs-up');
+        btn.classList.remove('fa-thumbs-down');
+
+        const liked = post_liked.indexOf(id) >= 0;
+
+        if (liked) {
+            fetch(`/remove_like/${id}`)
+                .then(response => response.json())
+                .then(result => {
+                    btn.classList.add('fa-thumbs-up');
+                });
+        } else {
+            fetch(`/add_like/${id}`)
+                .then(response => response.json())
+                .then(result => {
+                    btn.classList.add('fa-thumbs-down');
+                });
+        }
+    }
+</script>
+
+
+<h1>Following</h1><br/>
+
+
+<div class="all-posts">
+    {% for post in posts_on_page %}
+    <div class="post">
+        <p class="stand-out">
+            <a href="{% url 'profile' post.user.id %}">
+                @{{post.user.username|title}}
+            </a>
+        </p>
+        <p class="message" id="message_{{post.id}}">{{post.message}}</p>
+        <p class="date">{{post.date_posted}}</p>
+        {% if post.id in post_liked %}
+        <button class="btn btn-info fa fa-thumbs-down col-1" onclick="likeHandler({{ post.id }}, {{ post_liked }})"
+            id="{{ post.id }}"></button>
+        {% else %}
+        <button class="btn btn-info fa fa-thumbs-up col-1" onclick="likeHandler({{ post.id }}, {{ post_liked }})"
+            id="{{ post.id }}"></button>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+
+<nav aria-label="Page navigation example">
+    <ul class="pagination d-flex justify-content-center">
+        {% if posts_on_page.has_previous %}
+        <li class="page-item"><a class="page-link"
+                href="?page={{ posts_on_page.previous_page_number }}">Previous</a></li>
+        {% endif %}
+        {% if posts_on_page.has_next %}
+        <li class="page-item"><a class="page-link"
+                href="?page={{ posts_on_page.next_page_number }}">Next</a></li>
+        {% endif %}
+    </ul>
+</nav>
+{% endblock %}
